@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let movieBloodAmount = document.querySelector("#amount")
     let movieDetailImage = document.querySelector("#detail-image")
     let currentWatched = false;
+    let myCurrentID = 0;
 
     fetch(`http://localhost:3000/movies`)
     .then(response => response.json())
@@ -15,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data.forEach(element => {
             let myImage = document.createElement('img')
             myImage.setAttribute('src', element.image)
+            
             myImage.addEventListener('click', (myEvent) => {
                 myCurrentID = element.id;
                 movieDetailImage.setAttribute('src', element.image)
@@ -23,45 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 movieDescription.innerHTML = element.description;
                 movieBloodAmount.innerHTML = element.blood_amount;
                 currentWatched = element.watched;
-                if (element.watched == true) {
-                    movieWatched.innerHTML = "Watched";
-                    currentWatched = true;
-                }
-                else {
-                    movieWatched.innerHTML = "UnWatched";
-                    currentWatched = false;
-                }
-                console.log("After picture", currentWatched)
+                fetch(`http://localhost:3000/movies/${element.id}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.watched);
+                })
             });
             movieList.append(myImage)
         })
-
-        movieWatched.addEventListener('click', (e) => {
-            console.log("Button", currentWatched)
-            if (currentWatched == true) {
-                currentWatched = false;
-                movieWatched.innerHTML = 'UNWATCHED'
-            }else {
-                currentWatched = true;
-                movieWatched.innerHTML = 'WATCHED'
-            }
-            console.log("After Button", currentWatched)
-            fetch(`http://localhost:3000/movies/${myCurrentID}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    watched: currentWatched
-                })
-            })
-            // .then(response => response.json())
-            // .then(data => {
-            
-            // })
-        })
-    
         //processes first movie
         myCurrentID = 1;
         movieDetailImage.setAttribute('src', data[0].image)
@@ -77,4 +48,28 @@ document.addEventListener("DOMContentLoaded", () => {
             currentWatched = data[0].watched;
         }
     })
+
+    movieWatched.addEventListener('click', (e) => {
+        //Change watched status and change watched button text
+        if (currentWatched == true) {
+            currentWatched = false;
+            movieWatched.innerHTML = 'UNWATCHED'
+        }else if (currentWatched == false) {
+            currentWatched = true;
+            movieWatched.innerHTML = 'WATCHED'
+        }
+        
+        //tell server what watched status is
+        fetch(`http://localhost:3000/movies/${myCurrentID}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                watched: currentWatched
+            })
+        })
+    })
+
 });
